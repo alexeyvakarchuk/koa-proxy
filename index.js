@@ -105,7 +105,7 @@ module.exports = function(options) {
 
     if (options.modifyResponse) {
       if (typeof options.modifyResponse === "function") {
-        res = options.modifyResponse(ctx, res.body);
+        res = options.modifyResponse(ctx, res);
       }
     }
 
