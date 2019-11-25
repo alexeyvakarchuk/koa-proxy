@@ -1,29 +1,29 @@
-'use strict';
+"use strict";
 
-var Stream = require('stream');
-var join = require('url').resolve;
-var rp = require('request-promise-native');
-var requestLib = require('request');
-var pauseStream = require('pause-stream');
+var Stream = require("stream");
+var join = require("url").resolve;
+var rp = require("request-promise-native");
+var requestLib = require("request");
+var pauseStream = require("pause-stream");
 
 module.exports = function(options) {
   options || (options = {});
 
   if (!(options.host || options.map || options.url)) {
-    throw new Error('miss options');
+    throw new Error("miss options");
   }
 
   return async function proxy(ctx, next) {
     var url = resolve(ctx.path, options);
 
-    if (typeof options.suppressRequestHeaders === 'object') {
+    if (typeof options.suppressRequestHeaders === "object") {
       options.suppressRequestHeaders.forEach(function(h, i) {
         options.suppressRequestHeaders[i] = h.toLowerCase();
       });
     }
 
     var suppressResponseHeaders = []; // We should not be overwriting the options object!
-    if (typeof options.suppressResponseHeaders === 'object') {
+    if (typeof options.suppressResponseHeaders === "object") {
       options.suppressResponseHeaders.forEach(function(h, i) {
         suppressResponseHeaders.push(h.toLowerCase());
       });
@@ -45,7 +45,7 @@ module.exports = function(options) {
 
     var opt = {
       jar: options.jar === true,
-      url: url + (ctx.querystring ? '?' + ctx.querystring : ''),
+      url: url + (ctx.querystring ? "?" + ctx.querystring : ""),
       headers: ctx.request.header,
       encoding: null,
       followRedirect: options.followRedirect === false ? false : true,
@@ -58,12 +58,12 @@ module.exports = function(options) {
     // set "Host" header to options.host (without protocol prefix), strip trailing slash
     if (options.host)
       opt.headers.host = options.host
-        .slice(options.host.indexOf('://') + 3)
-        .replace(/\/$/, '');
+        .slice(options.host.indexOf("://") + 3)
+        .replace(/\/$/, "");
 
     if (options.requestOptions) {
-      if (typeof options.requestOptions === 'function') {
-        opt = options.requestOptions(ctx.request, opt);
+      if (typeof options.requestOptions === "function") {
+        opt = options.requestOptions(ctx, opt);
       } else {
         Object.keys(options.requestOptions).forEach(function(option) {
           opt[option] = options.requestOptions[option];
@@ -80,7 +80,7 @@ module.exports = function(options) {
       }
     }
 
-    if (parsedBody || ctx.method === 'GET') {
+    if (parsedBody || ctx.method === "GET") {
       var res = await rp(opt);
     } else {
       var res = await pipe(ctx.req, opt);
@@ -91,13 +91,13 @@ module.exports = function(options) {
       if (suppressResponseHeaders.indexOf(name.toLowerCase()) >= 0) {
         continue;
       }
-      if (name === 'transfer-encoding') {
+      if (name === "transfer-encoding") {
         continue;
       }
       ctx.set(name, res.headers[name]);
     }
 
-    if(options.overrideResponseHeaders) {
+    if (options.overrideResponseHeaders) {
       for (let headerKey in options.overrideResponseHeaders) {
         ctx.set(headerKey, options.overrideResponseHeaders[headerKey]);
       }
@@ -121,11 +121,11 @@ function resolve(path, options) {
     return ignoreQuery(url);
   }
 
-  if (typeof options.map === 'object') {
+  if (typeof options.map === "object") {
     if (options.map && options.map[path]) {
       path = ignoreQuery(options.map[path]);
     }
-  } else if (typeof options.map === 'function') {
+  } else if (typeof options.map === "function") {
     path = options.map(path);
   }
 
@@ -133,7 +133,7 @@ function resolve(path, options) {
 }
 
 function ignoreQuery(url) {
-  return url ? url.split('?')[0] : null;
+  return url ? url.split("?")[0] : null;
 }
 
 function getParsedBody(ctx) {
@@ -141,12 +141,12 @@ function getParsedBody(ctx) {
   if (body === undefined || body === null) {
     return undefined;
   }
-  var contentType = ctx.request.header['content-type'];
-  if (!Buffer.isBuffer(body) && typeof body !== 'string') {
-    if (contentType && contentType.indexOf('json') !== -1) {
+  var contentType = ctx.request.header["content-type"];
+  if (!Buffer.isBuffer(body) && typeof body !== "string") {
+    if (contentType && contentType.indexOf("json") !== -1) {
       body = JSON.stringify(body);
     } else {
-      body = body + '';
+      body = body + "";
     }
   }
   return body;
@@ -157,9 +157,11 @@ function getParsedBody(ctx) {
  */
 function pipe(incomingRequest, opt) {
   return new Promise((resolve, reject) => {
-    incomingRequest.pipe(requestLib(opt, (error, response) => {
-      if (error) return reject(error);
-      resolve(response);
-    }))
+    incomingRequest.pipe(
+      requestLib(opt, (error, response) => {
+        if (error) return reject(error);
+        resolve(response);
+      })
+    );
   });
 }
