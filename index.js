@@ -105,7 +105,7 @@ module.exports = function(options) {
 
     if (options.responseHandlers) {
       options.responseHandlers.map(({ paths, handler }) => {
-        if (path === ctx.path || paths.includes(ctx.path)) {
+        if (paths === ctx.path || paths.includes(ctx.path)) {
           ctx = handler(ctx, res);
         }
       });
