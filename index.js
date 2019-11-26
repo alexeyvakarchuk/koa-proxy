@@ -103,10 +103,12 @@ module.exports = function(options) {
       }
     }
 
-    if (options.modifyResponse) {
-      if (typeof options.modifyResponse === "function") {
-        res = options.modifyResponse(ctx, res);
-      }
+    if (options.responseHandlers) {
+      options.responseHandlers.map(({ paths, handler }) => {
+        if (path === ctx.path || paths.includes(ctx.path)) {
+          ctx = handler(ctx, res);
+        }
+      });
     }
 
     ctx.body = ctx.body || res.body;
